@@ -6,33 +6,74 @@ export default function Layout({ children }) {
   const { user } = useAuth()
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
-
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || ''
 
   return (
-    <div className="min-h-screen bg-amber-50">
-      <header className="bg-white border-b border-amber-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-amber-900 text-lg">
-            <span>☕</span>
-            <span>Coffee Tracker</span>
+    <div style={{ minHeight: '100svh', background: 'var(--color-bg)' }}>
+      <header style={{
+        background: 'var(--color-espresso)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}>
+        <div style={{
+          maxWidth: 'var(--max-width-content)',
+          margin: '0 auto',
+          padding: '0 var(--space-4)',
+          height: 56,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <Link to="/" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            textDecoration: 'none',
+            fontFamily: 'var(--font-display)',
+            fontWeight: 'var(--weight-semibold)',
+            fontSize: 20,
+            color: 'var(--color-bg)',
+            letterSpacing: '-0.3px',
+          }}>
+            ☕ Coffee Tracker
           </Link>
-          <div className="flex items-center gap-4">
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
             {user ? (
               <>
-                <span className="text-sm text-amber-700">{displayName}</span>
+                <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-roast-muted)' }}>
+                  {displayName}
+                </span>
                 <button
                   onClick={() => signOut()}
-                  className="text-xs text-amber-600 hover:text-amber-900"
+                  style={{
+                    fontSize: 'var(--text-caption)',
+                    color: 'rgba(255,255,255,0.5)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-body)',
+                    transition: 'color var(--transition-fast)',
+                  }}
+                  onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.85)'}
+                  onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.5)'}
                 >
                   Sign out
                 </button>
               </>
             ) : !isLoginPage ? (
-              <Link
-                to="/login"
-                className="text-xs bg-amber-800 text-white px-3 py-1.5 rounded-lg hover:bg-amber-900 transition-colors"
-              >
+              <Link to="/login" className="btn btn-sm" style={{
+                background: 'var(--color-roast)',
+                color: 'var(--color-bg)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '6px 14px',
+                fontSize: 13,
+                fontFamily: 'var(--font-body)',
+                fontWeight: 'var(--weight-medium)',
+                textDecoration: 'none',
+              }}>
                 Sign in
               </Link>
             ) : null}
@@ -40,7 +81,11 @@ export default function Layout({ children }) {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main style={{
+        maxWidth: 'var(--max-width-content)',
+        margin: '0 auto',
+        padding: 'var(--space-6) var(--space-4)',
+      }}>
         {children}
       </main>
     </div>

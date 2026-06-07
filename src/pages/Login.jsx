@@ -22,53 +22,67 @@ export default function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center py-12">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">☕</div>
-          <h1 className="text-2xl font-bold text-amber-900">Coffee Tracker</h1>
-          <p className="text-amber-700 text-sm mt-1">Josh &amp; Erin's brew log</p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-7) 0' }}>
+      <div className="card" style={{ width: '100%', maxWidth: 'var(--max-width-narrow)', padding: 'var(--space-7)' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+          <div style={{ fontSize: 48, marginBottom: 'var(--space-3)' }}>☕</div>
+          <h1 className="text-h2">Coffee Tracker</h1>
+          <p style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-caption)',
+            letterSpacing: '1px',
+            color: 'var(--color-roast-muted)',
+            textTransform: 'uppercase',
+            marginTop: 'var(--space-2)',
+          }}>
+            Josh &amp; Erin's brew log
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
-            <label className="block text-sm font-medium text-amber-900 mb-1">Email</label>
+            <label className="input-label">Email</label>
             <input
+              className="input"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               placeholder="you@example.com"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-amber-900 mb-1">Password</label>
+            <label className="input-label">Password</label>
             <input
+              className="input"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <p className="text-red-600 text-sm">{error}</p>
+            <p style={{ fontSize: 'var(--text-body-sm)', color: '#DC2626' }}>{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-800 text-white rounded-lg py-2 text-sm font-medium hover:bg-amber-900 disabled:opacity-50 transition-colors"
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', marginTop: 'var(--space-2)' }}
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-amber-400 mt-4">
-          <Link to="/" className="underline hover:text-amber-700">← Back to coffee list</Link>
+        <p style={{ textAlign: 'center', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', marginTop: 'var(--space-5)' }}>
+          <Link to="/" style={{ color: 'var(--color-roast-light)', textDecoration: 'underline' }}>
+            ← Back to coffee list
+          </Link>
         </p>
       </div>
     </div>

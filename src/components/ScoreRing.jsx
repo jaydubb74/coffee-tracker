@@ -1,29 +1,44 @@
 export default function ScoreRing({ score, size = 48, label }) {
-  if (score == null) {
-    return (
-      <div className="flex flex-col items-center gap-0.5">
-        <div
-          style={{ width: size, height: size }}
-          className="rounded-full border-2 border-dashed border-amber-200 flex items-center justify-center text-amber-300 text-xs"
-        >
-          —
-        </div>
-        {label && <span className="text-xs text-amber-500">{label}</span>}
-      </div>
-    )
-  }
-
-  const color = score >= 85 ? '#16a34a' : score >= 70 ? '#d97706' : '#dc2626'
+  const color = score == null
+    ? 'var(--color-border)'
+    : score >= 85 ? 'var(--color-positive)'
+    : score >= 70 ? 'var(--color-warning)'
+    : 'var(--color-roast)'
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div
-        style={{ width: size, height: size, borderColor: color }}
-        className="rounded-full border-2 flex items-center justify-center font-bold text-sm"
-      >
-        <span style={{ color }}>{score}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: 'var(--radius-full)',
+        border: `2px ${score == null ? 'dashed' : 'solid'} ${color}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <span style={{
+          fontFamily: score == null ? 'var(--font-body)' : 'var(--font-display)',
+          fontWeight: 'var(--weight-bold)',
+          fontSize: size >= 56 ? 18 : size >= 44 ? 15 : 13,
+          color,
+          lineHeight: 1,
+        }}>
+          {score ?? '—'}
+        </span>
       </div>
-      {label && <span className="text-xs text-amber-500">{label}</span>}
+      {label && (
+        <span style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          fontWeight: 'var(--weight-medium)',
+          letterSpacing: '0.5px',
+          color: 'var(--color-text-muted)',
+          textTransform: 'uppercase',
+        }}>
+          {label}
+        </span>
+      )}
     </div>
   )
 }

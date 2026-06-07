@@ -27,7 +27,6 @@ export default function CoffeeList() {
           .order('created_at', { ascending: false }),
         supabase.from('brands').select('id, name').order('name'),
       ])
-
       setReviews(reviewData || [])
       setBrands(brandData || [])
       setLoading(false)
@@ -54,33 +53,47 @@ export default function CoffeeList() {
     return userId === user.id ? 'Josh' : 'Erin'
   }
 
+  function roastChipClass(roast) {
+    if (!roast) return 'chip chip-origin'
+    const r = roast.toLowerCase()
+    if (r.includes('light')) return 'chip chip-roast-light'
+    if (r.includes('dark'))  return 'chip chip-roast-dark'
+    return 'chip chip-roast-medium'
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-amber-900">Recent Reviews</h1>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-5)' }}>
+        <div>
+          <h1 className="text-h2">Recent Reviews</h1>
+          {reviews.length > 0 && (
+            <p className="text-caption" style={{ marginTop: 4 }}>{reviews.length} review{reviews.length !== 1 ? 's' : ''}</p>
+          )}
+        </div>
         {user && (
-          <Link
-            to="/add"
-            className="bg-amber-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-amber-900 transition-colors"
-          >
+          <Link to="/add" className="btn btn-primary btn-sm">
             + Add Review
           </Link>
         )}
       </div>
 
-      <div className="flex gap-2 mb-4">
+      {/* Search + Filter */}
+      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-5)' }}>
         <input
+          className="input"
           type="search"
           placeholder="Search brand, blend, notes…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+          style={{ flex: 1 }}
         />
         {brands.length > 0 && (
           <select
+            className="input"
             value={brandFilter}
             onChange={e => setBrandFilter(e.target.value)}
-            className="border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white text-amber-800"
+            style={{ width: 'auto', minWidth: 130 }}
           >
             <option value="">All brands</option>
             {brands.map(b => (
@@ -90,14 +103,20 @@ export default function CoffeeList() {
         )}
       </div>
 
+      {/* Content */}
       {loading ? (
-        <div className="text-center text-amber-600 py-12">Loading…</div>
+        <div style={{ textAlign: 'center', padding: 'var(--space-8) 0', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-caption)', letterSpacing: 1 }}>
+          Loading…
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center text-amber-500 py-12">
-          {search || brandFilter ? 'No matches.' : 'No reviews yet — add your first one!'}
+        <div style={{ textAlign: 'center', padding: 'var(--space-8) 0', color: 'var(--color-text-muted)' }}>
+          <div style={{ fontSize: 40, marginBottom: 'var(--space-3)' }}>☕</div>
+          <p className="text-body-sm">
+            {search || brandFilter ? 'No matches found.' : 'No reviews yet — add your first one!'}
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {filtered.map(review => {
             const coffee = review.coffees
             const brand = coffee?.brands?.name
@@ -105,33 +124,61 @@ export default function CoffeeList() {
               <Link
                 key={review.id}
                 to={`/coffee/${coffee?.id}`}
-                className="flex gap-4 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-amber-50"
+                className="card"
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-4)',
+                  padding: 'var(--space-4)',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
               >
                 {/* Photo */}
-                <div className="flex-shrink-0">
+                <div style={{ flexShrink: 0 }}>
                   {coffee?.photo_url ? (
                     <img
                       src={coffee.photo_url}
                       alt={coffee.blend || brand}
-                      className="w-20 h-20 rounded-xl object-cover"
+                      style={{ width: 80, height: 80, borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-xl bg-amber-100 flex items-center justify-center text-3xl">
+                    <div style={{
+                      width: 80, height: 80,
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-bg-parchment)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 32,
+                    }}>
                       ☕
                     </div>
                   )}
                 </div>
 
                 {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-bold text-amber-900 truncate">{brand}</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 'var(--weight-semibold)',
+                        fontSize: 'var(--text-h4)',
+                        color: 'var(--color-espresso)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {brand}
+                      </p>
                       {coffee?.blend && (
-                        <p className="text-sm text-amber-700 truncate">{coffee.blend}</p>
+                        <p style={{
+                          fontSize: 'var(--text-body-sm)',
+                          color: 'var(--color-text-secondary)',
+                          marginTop: 2,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {coffee.blend}
+                        </p>
                       )}
                       {coffee?.roast_type && (
-                        <span className="inline-block mt-1 text-xs bg-amber-100 text-amber-600 rounded-full px-2 py-0.5">
+                        <span className={roastChipClass(coffee.roast_type)} style={{ marginTop: 'var(--space-2)' }}>
                           {coffee.roast_type}
                         </span>
                       )}
@@ -140,19 +187,31 @@ export default function CoffeeList() {
                   </div>
 
                   {review.notes && (
-                    <p className="text-sm text-amber-700 mt-2 line-clamp-2 leading-relaxed">
+                    <p style={{
+                      fontSize: 'var(--text-body-sm)',
+                      color: 'var(--color-text-secondary)',
+                      marginTop: 'var(--space-2)',
+                      fontStyle: 'italic',
+                      lineHeight: 'var(--leading-relaxed)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}>
                       "{review.notes}"
                     </p>
                   )}
 
-                  <div className="flex items-center gap-2 mt-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
                     {user && (
-                      <span className="text-xs font-medium text-amber-500">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-caption)', color: 'var(--color-roast-light)', fontWeight: 'var(--weight-medium)' }}>
                         {reviewerName(review.user_id)}
                       </span>
                     )}
-                    <span className="text-xs text-amber-300">·</span>
-                    <span className="text-xs text-amber-400">{formatDate(review.created_at)}</span>
+                    <span style={{ color: 'var(--color-border)', fontSize: 12 }}>·</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)' }}>
+                      {formatDate(review.created_at)}
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -162,8 +221,10 @@ export default function CoffeeList() {
       )}
 
       {!user && (
-        <p className="text-center text-amber-400 text-xs mt-8">
-          <Link to="/login" className="underline hover:text-amber-700">Sign in</Link> to add reviews
+        <p style={{ textAlign: 'center', marginTop: 'var(--space-7)', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)' }}>
+          <Link to="/login" style={{ color: 'var(--color-roast-light)', textDecoration: 'underline' }}>
+            Sign in
+          </Link>{' '}to add reviews
         </p>
       )}
     </div>
