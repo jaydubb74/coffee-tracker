@@ -21,6 +21,12 @@ export default function CoffeeDetail() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
 
+  const [editingReviewId, setEditingReviewId] = useState(null)
+  const [editScore, setEditScore] = useState('75')
+  const [editNotes, setEditNotes] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
+
   async function load() {
     const [{ data: coffeeData }, { data: reviewsData }, { data: profilesData }] = await Promise.all([
       supabase.from('coffees').select('*, brands(id, name)').eq('id', id).single(),
@@ -56,6 +62,32 @@ export default function CoffeeDetail() {
       setFormError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  function startEdit(review) {
+    setEditingReviewId(review.id)
+    setEditScore(String(review.score))
+    setEditNotes(review.notes || '')
+    setEditError('')
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault()
+    setEditSaving(true)
+    setEditError('')
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ score: parseInt(editScore), notes: editNotes.trim() || null })
+        .eq('id', editingReviewId)
+      if (error) throw error
+      setEditingReviewId(null)
+      await load()
+    } catch (err) {
+      setEditError(err.message)
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -259,36 +291,100 @@ export default function CoffeeDetail() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {reviews.map(review => {
               const isMe = review.user_id === user?.id
+              const isEditing = editingReviewId === review.id
               return (
                 <div key={review.id} className="card" style={{ padding: 'var(--space-4)' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
-                    <ScoreRing score={review.score} size={48} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {isEditing ? (
+                    /* Inline edit form */
+                    <form onSubmit={handleSaveEdit}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
                         <p style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-body-sm)', color: 'var(--color-espresso)' }}>
-                          {reviewerName(review.user_id)}
+                          Edit your review
                         </p>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)' }}>
                           {formatDate(review.created_at)}
                         </span>
                       </div>
-                      {review.notes && (
-                        <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-2)', lineHeight: 'var(--leading-relaxed)', fontStyle: 'italic' }}>
-                          "{review.notes}"
-                        </p>
-                      )}
-                      {isMe && (
-                        <button
-                          onClick={() => handleDeleteReview(review.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', marginTop: 'var(--space-2)', padding: 0, fontFamily: 'var(--font-body)' }}
-                          onMouseEnter={e => e.target.style.color = '#DC2626'}
-                          onMouseLeave={e => e.target.style.color = 'var(--color-text-muted)'}
-                        >
-                          Delete
+
+                      <div style={{ marginBottom: 'var(--space-3)' }}>
+                        <label className="input-label">
+                          Score: <span style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-bold)', fontSize: 20, color: 'var(--color-roast)' }}>{editScore}</span>
+                        </label>
+                        <input
+                          type="range" min="1" max="100" value={editScore}
+                          onChange={e => setEditScore(e.target.value)}
+                          style={{ width: '100%', accentColor: 'var(--color-roast)', margin: '6px 0 4px' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-text-muted)' }}>
+                          <span>1</span><span>50</span><span>100</span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: 'var(--space-3)' }}>
+                        <label className="input-label">Tasting Notes</label>
+                        <textarea
+                          className="input"
+                          value={editNotes}
+                          onChange={e => setEditNotes(e.target.value)}
+                          rows={3}
+                          placeholder="Dark chocolate, bright acidity, nutty finish…"
+                          style={{ resize: 'none' }}
+                        />
+                      </div>
+
+                      {editError && <p style={{ color: '#DC2626', fontSize: 'var(--text-body-sm)', marginBottom: 'var(--space-3)' }}>{editError}</p>}
+
+                      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                        <button type="submit" disabled={editSaving} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                          {editSaving ? 'Saving…' : 'Save'}
                         </button>
-                      )}
+                        <button type="button" onClick={() => setEditingReviewId(null)} className="btn btn-ghost btn-sm">
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    /* Normal read view */
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
+                      <ScoreRing score={review.score} size={48} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-body-sm)', color: 'var(--color-espresso)' }}>
+                            {reviewerName(review.user_id)}
+                          </p>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)' }}>
+                            {formatDate(review.created_at)}
+                          </span>
+                        </div>
+                        {review.notes && (
+                          <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-2)', lineHeight: 'var(--leading-relaxed)', fontStyle: 'italic' }}>
+                            "{review.notes}"
+                          </p>
+                        )}
+                        {isMe && (
+                          <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
+                            <button
+                              onClick={() => startEdit(review)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-caption)', color: 'var(--color-roast-light)', padding: 0, fontFamily: 'var(--font-body)', transition: 'color var(--transition-fast)' }}
+                              onMouseEnter={e => e.target.style.color = 'var(--color-roast)'}
+                              onMouseLeave={e => e.target.style.color = 'var(--color-roast-light)'}
+                            >
+                              Edit
+                            </button>
+                            <span style={{ color: 'var(--color-border)', fontSize: 12 }}>·</span>
+                            <button
+                              onClick={() => handleDeleteReview(review.id)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', padding: 0, fontFamily: 'var(--font-body)', transition: 'color var(--transition-fast)' }}
+                              onMouseEnter={e => e.target.style.color = '#DC2626'}
+                              onMouseLeave={e => e.target.style.color = 'var(--color-text-muted)'}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             })}
