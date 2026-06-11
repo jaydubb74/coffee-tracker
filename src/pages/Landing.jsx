@@ -160,7 +160,7 @@ export default function Landing() {
         background: 'var(--color-bg-parchment)',
         borderRadius: 'var(--radius-lg)',
         padding: 'var(--space-7) var(--space-6)',
-        margin: '0 0 var(--space-8)',
+        margin: '0 0 var(--space-4)',
         textAlign: 'center',
         border: '1px solid var(--color-border-light)',
       }}>
@@ -185,48 +185,6 @@ export default function Landing() {
         }}>
           — WineYak Reviewer, Portland
         </p>
-      </section>
-
-      {/* ── BOTTOM CTA ── */}
-      <section style={{
-        textAlign: 'center',
-        padding: 'var(--space-6) 0 var(--space-4)',
-        borderTop: '1px solid var(--color-border-light)',
-      }}>
-        <h2 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-h2)',
-          fontWeight: 'var(--weight-semibold)',
-          color: 'var(--color-espresso)',
-          marginBottom: 'var(--space-3)',
-        }}>
-          Ready to find your next favorite bean?
-        </h2>
-        <p style={{
-          fontSize: 'var(--text-body-sm)',
-          color: 'var(--color-text-secondary)',
-          marginBottom: 'var(--space-5)',
-        }}>
-          Browse the community's top-rated whole bean coffees — no account needed.
-        </p>
-        <Link to="/reviews" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'var(--color-roast)',
-          color: '#FFFFFF',
-          fontFamily: 'var(--font-body)',
-          fontWeight: 'var(--weight-semibold)',
-          fontSize: 'var(--text-body)',
-          padding: '14px 32px',
-          borderRadius: 'var(--radius-md)',
-          textDecoration: 'none',
-          boxShadow: '0 2px 12px rgba(107,58,42,0.25)',
-          transition: 'all var(--transition-base)',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-espresso)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-roast)'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          Browse Top-Rated Beans →
-        </Link>
       </section>
 
     </div>
