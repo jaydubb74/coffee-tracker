@@ -140,7 +140,7 @@ export default function CoffeeDetail() {
   return (
     <div>
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/reviews')}
         style={{
           background: 'none', border: 'none', cursor: 'pointer',
           color: 'var(--color-roast-light)', fontSize: 'var(--text-body-sm)',

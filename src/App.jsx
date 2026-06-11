@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import Landing from './pages/Landing'
 import CoffeeList from './pages/CoffeeList'
 import CoffeeDetail from './pages/CoffeeDetail'
 import AddCoffee from './pages/AddCoffee'
@@ -26,7 +27,8 @@ export default function App() {
       <AuthProvider>
         <Layout>
           <Routes>
-            <Route path="/" element={<CoffeeList />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/reviews" element={<CoffeeList />} />
             <Route path="/coffee/:id" element={<CoffeeDetail />} />
             <Route path="/login" element={<LoginPage />} />
             <Route

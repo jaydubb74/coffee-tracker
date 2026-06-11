@@ -80,8 +80,8 @@ export default function Login() {
         </form>
 
         <p style={{ textAlign: 'center', fontSize: 'var(--text-caption)', color: 'var(--color-text-muted)', marginTop: 'var(--space-5)' }}>
-          <Link to="/" style={{ color: 'var(--color-roast-light)', textDecoration: 'underline' }}>
-            ← Back to coffee list
+          <Link to="/reviews" style={{ color: 'var(--color-roast-light)', textDecoration: 'underline' }}>
+            ← Back to reviews
           </Link>
         </p>
       </div>

@@ -41,6 +41,18 @@ export default function Layout({ children }) {
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+            <Link to="/reviews" style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-body-sm)',
+              color: 'rgba(255,255,255,0.6)',
+              textDecoration: 'none',
+              transition: 'color var(--transition-fast)',
+            }}
+            onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.95)'}
+            onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
+            >
+              Reviews
+            </Link>
             {user ? (
               <>
                 <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-roast-muted)' }}>
