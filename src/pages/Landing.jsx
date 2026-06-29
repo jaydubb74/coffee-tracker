@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import ScoreRing from '../components/ScoreRing'
 
 const VALUE_PROPS = [
   {
@@ -24,6 +27,38 @@ const VALUE_PROPS = [
 ]
 
 export default function Landing() {
+  const [topCoffees, setTopCoffees] = useState([])
+  const [loadingTop, setLoadingTop] = useState(true)
+
+  useEffect(() => {
+    async function loadTop() {
+      const { data, error } = await supabase
+        .from('coffees')
+        .select(`
+          id, blend, roast_type, photo_url,
+          brands ( id, name ),
+          reviews ( score )
+        `)
+
+      if (!error && data) {
+        const withAvg = data
+          .map(c => {
+            const scores = (c.reviews || []).map(r => r.score)
+            if (!scores.length) return null
+            const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+            return { ...c, avg, reviewCount: scores.length }
+          })
+          .filter(Boolean)
+          .sort((a, b) => b.avg - a.avg)
+          .slice(0, 3)
+
+        setTopCoffees(withAvg)
+      }
+      setLoadingTop(false)
+    }
+    loadTop()
+  }, [])
+
   return (
     <div>
 
@@ -120,6 +155,83 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ── TOP RATED ── */}
+      {!loadingTop && topCoffees.length > 0 && (
+        <section style={{ padding: 'var(--space-8) 0 0' }}>
+          <p className="text-label" style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+            Top Rated Right Now
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 'var(--space-4)',
+          }}>
+            {topCoffees.map((coffee, i) => (
+              <Link
+                key={coffee.id}
+                to={`/coffee/${coffee.id}`}
+                className="card"
+                style={{
+                  padding: 'var(--space-5)',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  position: 'relative',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 'var(--space-3)', left: 'var(--space-3)',
+                  fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 'var(--weight-medium)',
+                  color: 'var(--color-roast-muted)', letterSpacing: 1,
+                }}>
+                  #{i + 1}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-3)' }}>
+                  {coffee.photo_url ? (
+                    <img
+                      src={coffee.photo_url}
+                      alt={coffee.blend || coffee.brands?.name}
+                      style={{ width: 72, height: 72, borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 72, height: 72, borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-bg-parchment)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+                    }}>
+                      ☕
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-semibold)',
+                    fontSize: 'var(--text-h4)', color: 'var(--color-espresso)',
+                  }}>
+                    {coffee.brands?.name}
+                  </p>
+                  {coffee.blend && (
+                    <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                      {coffee.blend}
+                    </p>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-3)' }}>
+                    <ScoreRing score={coffee.avg} size={48} />
+                  </div>
+                  <p style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-text-muted)',
+                    textTransform: 'uppercase', letterSpacing: 1, marginTop: 'var(--space-2)',
+                  }}>
+                    {coffee.reviewCount} review{coffee.reviewCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── VALUE PROPS ── */}
       <section style={{ padding: 'var(--space-8) 0' }}>
