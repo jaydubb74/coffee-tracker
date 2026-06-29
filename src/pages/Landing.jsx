@@ -50,7 +50,7 @@ export default function Landing() {
           })
           .filter(Boolean)
           .sort((a, b) => b.avg - a.avg)
-          .slice(0, 3)
+          .slice(0, 4)
 
         setTopCoffees(withAvg)
       }
