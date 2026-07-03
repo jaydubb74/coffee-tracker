@@ -3,9 +3,9 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Landing from './pages/Landing'
-import CoffeeList from './pages/CoffeeList'
-import CoffeeDetail from './pages/CoffeeDetail'
-import AddCoffee from './pages/AddCoffee'
+import ReviewFeed from './pages/ReviewFeed'
+import ProductDetail from './pages/ProductDetail'
+import AddReview from './pages/AddReview'
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth()
@@ -28,14 +28,16 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/reviews" element={<CoffeeList />} />
-            <Route path="/coffee/:id" element={<CoffeeDetail />} />
+            <Route path="/reviews" element={<ReviewFeed />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            {/* Legacy redirect for old coffee/:id URLs */}
+            <Route path="/coffee/:id" element={<Navigate to="/reviews" replace />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/add"
               element={
                 <RequireAuth>
-                  <AddCoffee />
+                  <AddReview />
                 </RequireAuth>
               }
             />

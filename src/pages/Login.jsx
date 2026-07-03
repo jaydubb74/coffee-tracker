@@ -27,7 +27,7 @@ export default function Login() {
 
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
           <div style={{ fontSize: 48, marginBottom: 'var(--space-3)' }}>☕</div>
-          <h1 className="text-h2">Coffee Tracker</h1>
+          <h1 className="text-h2">WineYak</h1>
           <p style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-caption)',
@@ -36,7 +36,7 @@ export default function Login() {
             textTransform: 'uppercase',
             marginTop: 'var(--space-2)',
           }}>
-            Josh &amp; Erin's brew log
+            West Coast · Whole Bean · Community Rated
           </p>
         </div>
 

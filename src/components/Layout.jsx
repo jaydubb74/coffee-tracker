@@ -37,7 +37,7 @@ export default function Layout({ children }) {
             color: 'var(--color-bg)',
             letterSpacing: '-0.3px',
           }}>
-            ☕ Coffee Tracker
+            ☕ WineYak
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
