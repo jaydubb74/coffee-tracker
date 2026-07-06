@@ -29,6 +29,7 @@ const VALUE_PROPS = [
 
 export default function Landing() {
   const [topCoffees, setTopCoffees] = useState([])
+  const [topIceCream, setTopIceCream] = useState([])
   const [loadingTop, setLoadingTop] = useState(true)
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function Landing() {
         `)
 
       if (!error && data) {
-        const withAvg = data
+        const ranked = data
           .map(p => {
             const ratings = (p.reviews || []).map(r => r.rating)
             if (!ratings.length) return null
@@ -50,9 +51,9 @@ export default function Landing() {
           })
           .filter(Boolean)
           .sort((a, b) => b.avg - a.avg)
-          .slice(0, 4)
 
-        setTopCoffees(withAvg)
+        setTopCoffees(ranked.filter(p => p.category === 'coffee').slice(0, 5))
+        setTopIceCream(ranked.filter(p => p.category === 'ice_cream').slice(0, 5))
       }
       setLoadingTop(false)
     }
@@ -157,62 +158,74 @@ export default function Landing() {
       </section>
 
       {/* ── TOP RATED ── */}
-      {!loadingTop && topCoffees.length > 0 && (
+      {!loadingTop && (topCoffees.length > 0 || topIceCream.length > 0) && (
         <section style={{ padding: 'var(--space-8) 0 0' }}>
-          <p className="text-label" style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+          <p className="text-label" style={{ textAlign: 'center', marginBottom: 'var(--space-7)' }}>
             Top Rated Right Now
           </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 'var(--space-4)',
-          }}>
-            {topCoffees.map((product, i) => {
-              const cat = CATEGORIES[product.category] ?? CATEGORIES.coffee
-              return (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.id}`}
-                  className="card"
-                  style={{ padding: 'var(--space-5)', textDecoration: 'none', color: 'inherit', position: 'relative' }}
-                >
-                  <div style={{ position: 'absolute', top: 'var(--space-3)', left: 'var(--space-3)', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 'var(--weight-medium)', color: 'var(--color-roast-muted)', letterSpacing: 1 }}>
-                    #{i + 1}
-                  </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-7)' }}>
+            {[
+              { label: '☕ Top Coffees', items: topCoffees },
+              { label: '🍦 Top Ice Creams', items: topIceCream },
+            ].map(({ label, items }) => items.length > 0 && (
+              <div key={label}>
+                <p style={{
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 'var(--weight-semibold)',
+                  fontSize: 'var(--text-h4)',
+                  color: 'var(--color-espresso)',
+                  marginBottom: 'var(--space-4)',
+                  paddingBottom: 'var(--space-3)',
+                  borderBottom: '1px solid var(--color-border-light)',
+                }}>
+                  {label}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  {items.map((product, i) => {
+                    const cat = CATEGORIES[product.category] ?? CATEGORIES.coffee
+                    return (
+                      <Link
+                        key={product.id}
+                        to={`/product/${product.id}`}
+                        className="card"
+                        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--space-4)', textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 'var(--weight-semibold)', color: 'var(--color-roast-muted)', letterSpacing: 1, width: 20, flexShrink: 0, textAlign: 'right' }}>
+                          #{i + 1}
+                        </span>
 
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-3)' }}>
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.variant || product.brand}
-                        style={{ width: 72, height: 72, borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <div style={{ width: 72, height: 72, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-parchment)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-                        {cat.emoji}
-                      </div>
-                    )}
-                  </div>
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.variant || product.brand}
+                            style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', objectFit: 'cover', flexShrink: 0 }}
+                          />
+                        ) : (
+                          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-parchment)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                            {cat.emoji}
+                          </div>
+                        )}
 
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-h4)', color: 'var(--color-espresso)' }}>
-                      {product.brand}
-                    </p>
-                    {product.variant && (
-                      <p style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                        {product.variant}
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--space-3)' }}>
-                      <ScoreRing score={product.avg} size={48} />
-                    </div>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 'var(--space-2)' }}>
-                      {product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </Link>
-              )
-            })}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-semibold)', fontSize: 'var(--text-body-sm)', color: 'var(--color-espresso)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {product.brand}
+                          </p>
+                          {product.variant && (
+                            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {product.variant}
+                            </p>
+                          )}
+                        </div>
+
+                        <div style={{ flexShrink: 0 }}>
+                          <ScoreRing score={product.avg} size={40} />
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
