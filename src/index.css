@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Nunito+Sans:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ============================================
@@ -8,39 +8,42 @@
 :root {
 
   /* COLORS — Backgrounds */
-  --color-bg:           #F5F0E8;
-  --color-bg-dark:      #EDE6D6;
-  --color-bg-parchment: #E8DFC8;
-  --color-surface:      #FFFFFF;
+  --color-bg:           oklch(96% 0.02 78);
+  --color-bg-dark:      oklch(93% 0.02 78);
+  --color-bg-parchment: oklch(94% 0.02 75);
+  --color-surface:      oklch(99% 0.008 80);
 
   /* COLORS — Text */
-  --color-text-primary:     #1C1917;
-  --color-text-secondary:   #4A5568;
-  --color-text-muted:       #718096;
-  --color-text-placeholder: #A0AEC0;
+  --color-text-primary:     oklch(24% 0.02 40);
+  --color-text-secondary:   oklch(45% 0.02 40);
+  --color-text-muted:       oklch(55% 0.02 40);
+  --color-text-placeholder: oklch(70% 0.02 40);
 
-  /* COLORS — Brand / Roast Scale */
-  --color-espresso:    #2C1810;
-  --color-roast:       #6B3A2A;
-  --color-roast-light: #9B5E4A;
-  --color-roast-muted: #C4907E;
+  /* COLORS — Brand */
+  --color-espresso:    oklch(24% 0.02 40);
+  --color-roast:       oklch(38% 0.13 25);
+  --color-roast-light: oklch(50% 0.13 25);
+  --color-roast-muted: oklch(65% 0.10 25);
 
-  /* COLORS — Semantic */
-  --color-sage:        #4A5E4A;
-  --color-sage-light:  #7A9E7A;
+  /* COLORS — Ice cream accent */
+  --color-sage:        oklch(40% 0.09 155);
+  --color-sage-light:  oklch(55% 0.09 155);
+
+  /* COLORS — Score gold */
+  --color-gold: oklch(78% 0.13 85);
 
   /* COLORS — Borders */
-  --color-border:       #D4C9B5;
-  --color-border-light: #E8E0D0;
+  --color-border:       oklch(88% 0.02 75);
+  --color-border-light: oklch(91% 0.02 75);
 
   /* COLORS — Status */
-  --color-positive: #3D7A4A;
-  --color-warning:  #B45309;
+  --color-positive: oklch(40% 0.09 155);
+  --color-warning:  oklch(58% 0.13 60);
 
   /* TYPOGRAPHY */
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
-  --font-mono:    'DM Mono', 'Courier New', monospace;
+  --font-display: 'Abril Fatface', Georgia, serif;
+  --font-body:    'Nunito Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'Nunito Sans', monospace;
 
   /* Type Scale */
   --text-hero:    48px;
@@ -90,8 +93,8 @@
   --shadow-card: 0 2px 8px rgba(44,24,16,0.08);
 
   /* LAYOUT */
-  --max-width-content: 680px;
-  --max-width-wide:    1080px;
+  --max-width-content: 1180px;
+  --max-width-wide:    1180px;
   --max-width-narrow:  480px;
 
   /* TRANSITIONS */
@@ -356,15 +359,15 @@ body {
 
 .card {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  box-shadow: var(--shadow-card);
+  border-radius: 22px;
+  border: none;
+  box-shadow: 0 1px 2px rgba(40,20,10,0.06), 0 10px 24px -12px rgba(40,20,10,0.28);
   transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(40,20,10,0.08), 0 18px 32px -14px rgba(40,20,10,0.36);
+  transform: translateY(-3px);
 }
 
 

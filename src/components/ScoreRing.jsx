@@ -1,37 +1,35 @@
+// score: 1–100 (stored in DB). Displays as x.x out of 10.
 export default function ScoreRing({ score, size = 48, label }) {
-  const color = score == null
-    ? 'var(--color-border)'
-    : score >= 85 ? 'var(--color-positive)'
-    : score >= 70 ? 'var(--color-warning)'
-    : 'var(--color-roast)'
+  const display = score == null ? '—' : (score / 10).toFixed(1)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
       <div style={{
         width: size,
         height: size,
-        borderRadius: 'var(--radius-full)',
-        border: `2px ${score == null ? 'dashed' : 'solid'} ${color}`,
+        borderRadius: '50%',
+        background: score == null ? 'var(--color-bg-parchment)' : 'var(--color-gold)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
+        boxShadow: score == null ? 'none' : '0 4px 10px rgba(40,20,10,0.2)',
       }}>
         <span style={{
-          fontFamily: score == null ? 'var(--font-body)' : 'var(--font-display)',
-          fontWeight: 'var(--weight-bold)',
-          fontSize: size >= 56 ? 18 : size >= 44 ? 15 : 13,
-          color,
+          fontWeight: 800,
+          fontFamily: 'var(--font-body)',
+          fontSize: size >= 56 ? 17 : size >= 44 ? 14 : 12,
+          color: 'oklch(26% 0.05 50)',
           lineHeight: 1,
         }}>
-          {score ?? '—'}
+          {display}
         </span>
       </div>
       {label && (
         <span style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'var(--font-body)',
           fontSize: 10,
-          fontWeight: 'var(--weight-medium)',
+          fontWeight: 700,
           letterSpacing: '0.5px',
           color: 'var(--color-text-muted)',
           textTransform: 'uppercase',

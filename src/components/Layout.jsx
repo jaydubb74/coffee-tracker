@@ -2,104 +2,127 @@ import { Link, useLocation } from 'react-router-dom'
 import { signOut } from '../lib/auth'
 import { useAuth } from '../context/AuthContext'
 
+const BURGUNDY = 'oklch(38% 0.13 25)'
+
 export default function Layout({ children }) {
   const { user } = useAuth()
   const location = useLocation()
-  const isLoginPage = location.pathname === '/login'
-  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || ''
+
+  const isHome = location.pathname === '/' && !location.search
+  const isCoffee = location.pathname === '/reviews' && location.search.includes('category=coffee')
+  const isIce = location.pathname === '/reviews' && location.search.includes('category=ice_cream')
+
+  function pillStyle(active) {
+    return {
+      padding: '8px 18px',
+      borderRadius: 999,
+      cursor: 'pointer',
+      fontFamily: 'var(--font-body)',
+      fontWeight: 700,
+      fontSize: 13,
+      lineHeight: '1.4',
+      textDecoration: 'none',
+      transition: 'background 0.15s ease',
+      background: active ? BURGUNDY : 'transparent',
+      color: active ? 'oklch(97% 0.02 85)' : 'oklch(30% 0.02 40)',
+      display: 'inline-block',
+    }
+  }
 
   return (
-    <div style={{ minHeight: '100svh', background: 'var(--color-bg)' }}>
-      <header style={{
-        background: 'var(--color-espresso)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}>
+    <div style={{ minHeight: '100svh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--color-bg)', paddingBottom: 18 }}>
         <div style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 14,
           maxWidth: 'var(--max-width-content)',
           margin: '0 auto',
-          padding: '0 var(--space-4)',
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          padding: '22px 48px 12px',
         }}>
-          <Link to="/" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-            textDecoration: 'none',
-            fontFamily: 'var(--font-display)',
-            fontWeight: 'var(--weight-semibold)',
-            fontSize: 20,
-            color: 'var(--color-bg)',
-            letterSpacing: '-0.3px',
-          }}>
-            ☕ WineYak
+          {/* Logo */}
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 14 }}>
+            <span style={{ font: `400 34px/1 'Abril Fatface', serif`, color: BURGUNDY }}>WineYak</span>
+            <span style={{ font: `600 13px/1.4 'Nunito Sans', sans-serif`, color: 'var(--color-text-secondary)', letterSpacing: '0.02em' }}>
+              coffee &amp; ice cream, tasted with joy
+            </span>
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-            <Link to="/reviews" style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 'var(--text-body-sm)',
-              color: 'rgba(255,255,255,0.6)',
-              textDecoration: 'none',
-              transition: 'color var(--transition-fast)',
-            }}
-            onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.95)'}
-            onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
-            >
-              Reviews
-            </Link>
+          {/* Nav pills */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Link to="/" style={pillStyle(isHome)}>Home</Link>
+            <Link to="/reviews?category=coffee" style={pillStyle(isCoffee)}>Coffee</Link>
+            <Link to="/reviews?category=ice_cream" style={pillStyle(isIce)}>Ice Cream</Link>
             {user ? (
               <>
-                <span style={{ fontSize: 'var(--text-body-sm)', color: 'var(--color-roast-muted)' }}>
-                  {displayName}
-                </span>
+                <Link to="/add" style={{ ...pillStyle(false), marginLeft: 8 }}>+ Review</Link>
                 <button
                   onClick={() => signOut()}
                   style={{
-                    fontSize: 'var(--text-caption)',
-                    color: 'rgba(255,255,255,0.5)',
+                    marginLeft: 4,
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
+                    fontSize: 12,
+                    color: 'var(--color-text-muted)',
                     fontFamily: 'var(--font-body)',
-                    transition: 'color var(--transition-fast)',
                   }}
-                  onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.85)'}
-                  onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.5)'}
                 >
                   Sign out
                 </button>
               </>
-            ) : !isLoginPage ? (
-              <Link to="/login" className="btn btn-sm" style={{
-                background: 'var(--color-roast)',
-                color: 'var(--color-bg)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '6px 14px',
-                fontSize: 13,
-                fontFamily: 'var(--font-body)',
-                fontWeight: 'var(--weight-medium)',
-                textDecoration: 'none',
+            ) : location.pathname !== '/login' ? (
+              <Link to="/login" style={{
+                ...pillStyle(false),
+                marginLeft: 8,
+                border: `1.5px solid ${BURGUNDY}`,
+                color: BURGUNDY,
+                padding: '6px 18px',
               }}>
                 Sign in
               </Link>
             ) : null}
           </div>
         </div>
-      </header>
 
+        {/* Scallop bottom edge */}
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 18,
+          background: 'var(--color-bg)',
+          WebkitMaskImage: 'radial-gradient(circle at 9px 0, transparent 9px, black 9.5px)',
+          maskImage: 'radial-gradient(circle at 9px 0, transparent 9px, black 9.5px)',
+          WebkitMaskSize: '18px 18px',
+          maskSize: '18px 18px',
+          WebkitMaskRepeat: 'repeat-x',
+          maskRepeat: 'repeat-x',
+        }} />
+      </div>
+
+      {/* Main content */}
       <main style={{
+        flex: 1,
         maxWidth: 'var(--max-width-content)',
+        width: '100%',
         margin: '0 auto',
-        padding: 'var(--space-6) var(--space-4)',
+        padding: '0 48px 80px',
+        boxSizing: 'border-box',
       }}>
         {children}
       </main>
+
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid var(--color-border)', padding: '22px 48px', textAlign: 'center' }}>
+        <span style={{ font: `600 12px/1.4 'Nunito Sans', sans-serif`, color: 'var(--color-text-muted)' }}>
+          WineYak — a personal collection, tasted with joy.
+        </span>
+      </div>
     </div>
   )
 }
