@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import { signOut } from '../lib/auth'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/auth-context'
+import { CATEGORIES } from '../lib/categories'
 
-const BURGUNDY = 'oklch(38% 0.13 25)'
+const BURGUNDY = CATEGORIES.coffee.accent
 
 export default function Layout({ children }) {
   const { user } = useAuth()
@@ -60,7 +61,7 @@ export default function Layout({ children }) {
               <>
                 <Link to="/add" style={{ ...pillStyle(false), marginLeft: 8 }}>+ Review</Link>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => signOut().catch(err => alert(`Sign out failed: ${err.message}`))}
                   style={{
                     marginLeft: 4,
                     background: 'none',

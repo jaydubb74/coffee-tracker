@@ -1,32 +1,57 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-
-const AuthContext = createContext(null)
+import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+
+    // Sets user immediately, then loads their profile (display name + admin flag)
+    async function applySession(session) {
+      const nextUser = session?.user ?? null
+      setUser(nextUser)
+      if (!nextUser) {
+        setProfile(null)
+        return
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, display_name, is_admin')
+        .eq('id', nextUser.id)
+        .maybeSingle()
+      if (!cancelled) setProfile(data ?? null)
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
+      applySession(session).finally(() => {
+        if (!cancelled) setLoading(false)
+      })
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      applySession(session)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
+  const value = {
+    user,
+    profile,
+    isAdmin: profile?.is_admin === true,
+    loading,
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  return useContext(AuthContext)
 }

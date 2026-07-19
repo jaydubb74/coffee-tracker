@@ -32,15 +32,17 @@ There are no tests.
 Three tables:
 - **`products`** — the canonical catalog. `category` is `'coffee' | 'ice_cream'`. `unique(category, brand, variant)` prevents duplicates. Price normalization: coffee → per 12 oz, ice cream → per pint (16 oz). `roast_type` is coffee-only; null for everything else.
 - **`reviews`** — join between a product and a `auth.users` user. `rating` is 1–100. No computed average is stored; every page calculates it from raw rows at query time.
-- **`profiles`** — auto-created via a `handle_new_user` trigger on `auth.users` insert. Stores `display_name`.
+- **`profiles`** — auto-created via a `handle_new_user` trigger on `auth.users` insert. Stores `display_name` and `is_admin`.
 
 Storage bucket: `coffee-photos` (public). Images are uploaded at review submission time and their URL is written back to `products.image_url`.
 
-RLS is enabled on all tables. All reads are public. Writes require `authenticated` role; reviews are further scoped to `auth.uid() = user_id`.
+RLS is enabled on all tables. All reads are public. Product writes (insert/update/delete) and storage uploads are admin-only via the `public.is_admin()` security-definer function (checks `profiles.is_admin` for `auth.uid()`). Reviews: any authenticated user can insert/update their own (`auth.uid() = user_id`); delete is own-or-admin. `supabase-migrations/` holds additive migrations safe to run on the live DB; `supabase-schema.sql` is a destructive full reset kept in sync with the same end state.
+
+Frontend authorization mirrors this: `useAuth()` exposes `{ user, profile, isAdmin, loading }`, and admin-only UI (new-product form in AddReview, product delete, deleting others' reviews) is gated on `isAdmin`. UI gating is cosmetic — RLS is the enforcement layer.
 
 ### Frontend structure
 
-`src/lib/categories.js` is the single source of truth for category behavior — labels, emoji, price units, roast type lists, and the `normalizePrice()` utility. Import `CATEGORIES[product.category]` anywhere you need category-aware display or `categoryOf(product)` as a safe helper.
+`src/lib/categories.js` is the single source of truth for category behavior — labels, emoji, accent colors, price units, roast type lists, and the `normalizePrice()` / `averageRating()` utilities. Import `CATEGORIES[product.category]` anywhere you need category-aware display or `categoryOf(product)` as a safe helper. Category accent colors are `CATEGORIES.<cat>.accent` (CSS vars `--color-roast` / `--color-sage`); don't hardcode oklch values in components.
 
 `src/lib/supabase.js` exports a single `supabase` client (anon key, from `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`).
 
@@ -58,8 +60,4 @@ Routes (React Router v7):
 
 All styling is inline React styles using CSS custom properties defined in `src/index.css`. No Tailwind utilities are used in components — Tailwind is imported but the design token system (`--color-*`, `--space-*`, `--font-*`, `--text-*`, `--radius-*`) is the actual design language. Fonts: Playfair Display (display/headings), DM Sans (body), DM Mono (labels/mono).
 
-`ScoreRing` is the shared rating component — renders a circular badge with color thresholds: ≥85 green, ≥70 amber, <70 roast-brown.
-
-### Legacy files
-
-`src/pages/AddCoffee.jsx`, `src/pages/CoffeeDetail.jsx`, and `src/pages/CoffeeList.jsx` are the old single-category pages and are no longer routed. They can be deleted.
+`ScoreRing` is the shared rating component — renders a gold circular badge showing the 1–100 score as x.x out of 10.

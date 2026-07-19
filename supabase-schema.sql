@@ -9,8 +9,10 @@ drop table if exists public.profiles cascade;
 
 drop trigger if exists on_auth_user_created on auth.users;
 drop function if exists public.handle_new_user();
+drop function if exists public.is_admin();
 
 drop policy if exists "Anyone authenticated can upload photos" on storage.objects;
+drop policy if exists "Admins can upload photos" on storage.objects;
 drop policy if exists "Photos are publicly viewable" on storage.objects;
 
 -- -------------------------------------------------------
@@ -19,14 +21,24 @@ drop policy if exists "Photos are publicly viewable" on storage.objects;
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   display_name text not null,
+  is_admin boolean not null default false,
   created_at timestamptz default now()
 );
 
 alter table public.profiles enable row level security;
-create policy "Profiles are viewable by authenticated users"
-  on public.profiles for select to authenticated using (true);
+create policy "Profiles viewable by all"
+  on public.profiles for select using (true);
 create policy "Users can update their own profile"
   on public.profiles for update to authenticated using (auth.uid() = id);
+
+-- security definer so the check works regardless of profiles RLS
+create or replace function public.is_admin()
+returns boolean
+language sql stable security definer
+set search_path = public
+as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false)
+$$;
 
 create or replace function public.handle_new_user()
 returns trigger as $$
@@ -66,12 +78,12 @@ create table public.products (
 alter table public.products enable row level security;
 create policy "Products viewable by all"
   on public.products for select using (true);
-create policy "Authenticated users can insert products"
-  on public.products for insert to authenticated with check (true);
-create policy "Authenticated users can update products"
-  on public.products for update to authenticated using (true);
-create policy "Authenticated users can delete products"
-  on public.products for delete to authenticated using (true);
+create policy "Admins can insert products"
+  on public.products for insert to authenticated with check (public.is_admin());
+create policy "Admins can update products"
+  on public.products for update to authenticated using (public.is_admin());
+create policy "Admins can delete products"
+  on public.products for delete to authenticated using (public.is_admin());
 
 -- -------------------------------------------------------
 
@@ -93,8 +105,9 @@ create policy "Users can insert their own reviews"
   on public.reviews for insert to authenticated with check (auth.uid() = user_id);
 create policy "Users can update their own reviews"
   on public.reviews for update to authenticated using (auth.uid() = user_id);
-create policy "Users can delete their own reviews"
-  on public.reviews for delete to authenticated using (auth.uid() = user_id);
+create policy "Users can delete own reviews; admins can delete any"
+  on public.reviews for delete to authenticated
+  using (auth.uid() = user_id or public.is_admin());
 
 -- -------------------------------------------------------
 
@@ -102,9 +115,9 @@ create policy "Users can delete their own reviews"
 insert into storage.buckets (id, name, public) values ('coffee-photos', 'coffee-photos', true)
   on conflict (id) do nothing;
 
-create policy "Anyone authenticated can upload photos"
+create policy "Admins can upload photos"
   on storage.objects for insert to authenticated
-  with check (bucket_id = 'coffee-photos');
+  with check (bucket_id = 'coffee-photos' and public.is_admin());
 
 create policy "Photos are publicly viewable"
   on storage.objects for select

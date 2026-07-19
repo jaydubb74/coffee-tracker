@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/auth-context'
 import { CATEGORIES, normalizePrice } from '../lib/categories'
 
 const NEW_PRODUCT = '__new__'
@@ -11,7 +11,7 @@ const SIZE_UNITS = {
 }
 
 export default function AddReview() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
   const fileRef = useRef()
 
@@ -40,36 +40,45 @@ export default function AddReview() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Reload products when category changes
+  // Reload products when category changes (loading/selection state is reset in handleCategoryChange)
   useEffect(() => {
-    setLoadingProducts(true)
-    setSelectedProductId('')
+    let cancelled = false
     supabase
       .from('products')
       .select('id, brand, variant, roast_type, image_url')
       .eq('category', category)
-      .then(({ data }) => {
-        const sorted = (data || []).sort((a, b) =>
-          (a.brand || '').localeCompare(b.brand || '') ||
-          (a.variant || '').localeCompare(b.variant || '')
-        )
-        setProducts(sorted)
+      .order('brand')
+      .order('variant')
+      .then(({ data, error: loadErr }) => {
+        if (cancelled) return
+        if (loadErr) setError(`Couldn't load products: ${loadErr.message}`)
+        setProducts(data || [])
         setLoadingProducts(false)
       })
+    return () => { cancelled = true }
   }, [category])
 
   const selectedProduct = products.find(p => p.id === selectedProductId)
 
+  function clearPhoto() {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhoto(null)
+    setPhotoPreview(null)
+  }
+
   function handlePhotoChange(e) {
     const file = e.target.files[0]
     if (!file) return
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhoto(file)
     setPhotoPreview(URL.createObjectURL(file))
   }
 
   function handleCategoryChange(newCat) {
+    if (newCat === category) return
     setCategory(newCat)
-    setRawSizeUnit(newCat === 'coffee' ? 'oz' : 'oz')
+    setLoadingProducts(true)
+    setSelectedProductId('')
     setBrand('')
     setVariant('')
     setRoastType('')
@@ -77,8 +86,7 @@ export default function AddReview() {
     setRawSize('')
     setRawSizeUnit('oz')
     setProductNotes('')
-    setPhoto(null)
-    setPhotoPreview(null)
+    clearPhoto()
     setRating('')
     setReviewText('')
     setError('')
@@ -87,6 +95,7 @@ export default function AddReview() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!selectedProductId) { setError('Please choose a product'); return }
+    if (selectedProductId === NEW_PRODUCT && !isAdmin) { setError('Only an admin can add new products'); return }
     if (selectedProductId === NEW_PRODUCT && !brand.trim()) { setError(`${cat.brandLabel} is required`); return }
     if (!rating) { setError('Please set a rating'); return }
     setError('')
@@ -121,14 +130,18 @@ export default function AddReview() {
         const variantVal = variant.trim() || null
         const brandVal = brand.trim()
 
-        // Upsert product (handles race conditions if same brand/variant submitted twice)
-        const { data: existing } = await supabase
-          .from('products')
-          .select('id, image_url')
-          .eq('category', category)
-          .eq('brand', brandVal)
-          .is('variant', variantVal)
-          .maybeSingle()
+        const findExisting = () => {
+          let q = supabase
+            .from('products')
+            .select('id, image_url')
+            .eq('category', category)
+            .eq('brand', brandVal)
+          q = variantVal === null ? q.is('variant', null) : q.eq('variant', variantVal)
+          return q.maybeSingle()
+        }
+
+        const { data: existing, error: findErr } = await findExisting()
+        if (findErr) throw findErr
 
         if (existing) {
           productId = existing.id
@@ -152,10 +165,20 @@ export default function AddReview() {
               roast_type: roastType || null,
               notes: productNotes.trim() || null,
             })
-            .select()
+            .select('id')
             .single()
-          if (insertErr) throw insertErr
-          productId = data.id
+          if (insertErr) {
+            // unique(category, brand, variant) race: someone inserted it first — reuse theirs
+            if (insertErr.code === '23505') {
+              const { data: raced } = await findExisting()
+              if (!raced) throw insertErr
+              productId = raced.id
+            } else {
+              throw insertErr
+            }
+          } else {
+            productId = data.id
+          }
         }
       }
 
@@ -237,7 +260,7 @@ export default function AddReview() {
             disabled={loadingProducts}
           >
             <option value="">{loadingProducts ? 'Loading…' : `Select a ${cat.label.toLowerCase()}…`}</option>
-            <option value={NEW_PRODUCT}>+ Add a new {cat.label.toLowerCase()}</option>
+            {isAdmin && <option value={NEW_PRODUCT}>+ Add a new {cat.label.toLowerCase()}</option>}
             {products.map(p => (
               <option key={p.id} value={p.id}>
                 {p.brand}{p.variant ? ` — ${p.variant}` : ''}
@@ -245,7 +268,9 @@ export default function AddReview() {
             ))}
           </select>
           <p className="input-hint">
-            Pick an existing entry to add another review, or add a new one below.
+            {isAdmin
+              ? 'Pick an existing entry to add another review, or add a new one below.'
+              : 'Pick an entry to add your review.'}
           </p>
 
           {/* Existing product preview */}
@@ -269,8 +294,8 @@ export default function AddReview() {
           )}
         </div>
 
-        {/* New product fields */}
-        {selectedProductId === NEW_PRODUCT && (
+        {/* New product fields (admin only) */}
+        {isAdmin && selectedProductId === NEW_PRODUCT && (
           <div className="card" style={{ padding: 'var(--space-5)' }}>
             <p className="text-label" style={{ marginBottom: 'var(--space-4)' }}>New {cat.label} Details</p>
             <div style={sectionStyle}>
@@ -368,7 +393,7 @@ export default function AddReview() {
                     <img src={photoPreview} alt="preview" style={{ width: 120, height: 120, borderRadius: 'var(--radius-md)', objectFit: 'cover' }} />
                     <button
                       type="button"
-                      onClick={() => { setPhoto(null); setPhotoPreview(null) }}
+                      onClick={clearPhoto}
                       style={{ position: 'absolute', top: -8, right: -8, background: '#DC2626', color: 'white', border: 'none', borderRadius: '50%', width: 22, height: 22, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >×</button>
                   </div>

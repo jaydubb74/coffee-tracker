@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, Link, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/auth-context'
 import ScoreRing from '../components/ScoreRing'
-import { CATEGORIES, categoryOf } from '../lib/categories'
-
-const BURGUNDY = 'oklch(38% 0.13 25)'
-const FOREST = 'oklch(40% 0.09 155)'
+import { CATEGORIES, categoryOf, averageRating } from '../lib/categories'
 
 export default function ProductDetail() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const [product, setProduct] = useState(null)
   const [reviews, setReviews] = useState([])
   const [profiles, setProfiles] = useState({})
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   const [showRateForm, setShowRateForm] = useState(false)
   const [rating, setRating] = useState('75')
@@ -33,24 +30,35 @@ export default function ProductDetail() {
 
   const cat = product ? categoryOf(product) : CATEGORIES.coffee
   const isCoffee = product?.category === 'coffee'
-  const accentColor = isCoffee ? BURGUNDY : FOREST
+  const accentColor = cat.accent
 
   async function load() {
-    const [{ data: productData }, { data: reviewsData }, { data: profilesData }] = await Promise.all([
-      supabase.from('products').select('*').eq('id', id).single(),
+    const [{ data: productData, error: productErr }, { data: reviewsData, error: reviewsErr }] = await Promise.all([
+      supabase.from('products').select('*').eq('id', id).maybeSingle(),
       supabase.from('reviews').select('*').eq('product_id', id).order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, display_name'),
     ])
-    if (productData) setProduct(productData)
+    if (productErr || reviewsErr) {
+      setLoadError((productErr || reviewsErr).message)
+      setLoading(false)
+      return
+    }
+    setLoadError('')
+    setProduct(productData)
     setReviews(reviewsData || [])
-    if (profilesData) {
-      const map = {}
-      profilesData.forEach(p => { map[p.id] = p.display_name })
-      setProfiles(map)
+
+    const reviewerIds = [...new Set((reviewsData || []).map(r => r.user_id))]
+    if (reviewerIds.length) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', reviewerIds)
+      setProfiles(Object.fromEntries((profilesData || []).map(p => [p.id, p.display_name])))
     }
     setLoading(false)
   }
 
+  // load() only touches state after awaiting the fetch, so no sync setState cascade
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { load() }, [id])
 
   async function handleSubmitReview(e) {
@@ -101,13 +109,15 @@ export default function ProductDetail() {
 
   async function handleDeleteReview(reviewId) {
     if (!confirm('Delete this review?')) return
-    await supabase.from('reviews').delete().eq('id', reviewId)
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+    if (error) { alert(`Couldn't delete review: ${error.message}`); return }
     await load()
   }
 
   async function handleDeleteProduct() {
     if (!confirm(`Delete this ${cat.label.toLowerCase()} and all its reviews?`)) return
-    await supabase.from('products').delete().eq('id', id)
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) { alert(`Couldn't delete: ${error.message}`); return }
     navigate('/reviews')
   }
 
@@ -124,14 +134,13 @@ export default function ProductDetail() {
       Loading…
     </div>
   )
-  if (!product) return (
+  if (loadError || !product) return (
     <div style={{ textAlign: 'center', padding: '64px 0', color: '#DC2626', fontWeight: 600 }}>
-      Product not found.
+      {loadError ? `Something went wrong: ${loadError}` : 'Product not found.'}
     </div>
   )
 
-  const allRatings = reviews.map(r => r.rating)
-  const avg = allRatings.length ? Math.round(allRatings.reduce((a, b) => a + b, 0) / allRatings.length) : null
+  const avg = averageRating(reviews)
 
   const backHref = isCoffee ? '/reviews?category=coffee' : '/reviews?category=ice_cream'
   const backLabel = `← Back to ${isCoffee ? 'Coffee' : 'Ice Cream'}`
@@ -180,7 +189,7 @@ export default function ProductDetail() {
             />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
-              {isCoffee ? '☕' : '🍦'}
+              {cat.emoji}
             </div>
           )}
         </div>
@@ -375,6 +384,7 @@ export default function ProductDetail() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {reviews.map(review => {
               const isMe = review.user_id === user?.id
+              const canDelete = isMe || isAdmin
               const isEditing = editingReviewId === review.id
               return (
                 <div key={review.id} style={{
@@ -449,25 +459,29 @@ export default function ProductDetail() {
                             "{review.review_text}"
                           </p>
                         )}
-                        {isMe && (
+                        {canDelete && (
                           <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                            <button onClick={() => startEdit(review)} style={{
-                              background: 'none', border: 'none', cursor: 'pointer',
-                              fontSize: 12, color: accentColor, padding: 0,
-                              fontFamily: 'var(--font-body)', fontWeight: 700,
-                            }}>
-                              Edit
-                            </button>
-                            <button onClick={() => handleDeleteReview(review.id)} style={{
-                              background: 'none', border: 'none', cursor: 'pointer',
-                              fontSize: 12, color: 'var(--color-text-muted)', padding: 0,
-                              fontFamily: 'var(--font-body)', fontWeight: 700,
-                            }}
-                            onMouseEnter={e => e.target.style.color = '#DC2626'}
-                            onMouseLeave={e => e.target.style.color = 'var(--color-text-muted)'}
-                            >
-                              Delete
-                            </button>
+                            {isMe && (
+                              <button onClick={() => startEdit(review)} style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                fontSize: 12, color: accentColor, padding: 0,
+                                fontFamily: 'var(--font-body)', fontWeight: 700,
+                              }}>
+                                Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button onClick={() => handleDeleteReview(review.id)} style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                fontSize: 12, color: 'var(--color-text-muted)', padding: 0,
+                                fontFamily: 'var(--font-body)', fontWeight: 700,
+                              }}
+                              onMouseEnter={e => e.target.style.color = '#DC2626'}
+                              onMouseLeave={e => e.target.style.color = 'var(--color-text-muted)'}
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -480,8 +494,8 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* Delete product */}
-      {user && (
+      {/* Delete product (admin only) */}
+      {isAdmin && (
         <button
           onClick={handleDeleteProduct}
           style={{
