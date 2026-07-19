@@ -34,7 +34,7 @@ export default function Layout({ children }) {
     <div style={{ minHeight: '100svh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--color-bg)', paddingBottom: 18 }}>
-        <div style={{
+        <div className="header-inner" style={{
           display: 'flex',
           alignItems: 'baseline',
           justifyContent: 'space-between',
@@ -42,7 +42,6 @@ export default function Layout({ children }) {
           gap: 14,
           maxWidth: 'var(--max-width-content)',
           margin: '0 auto',
-          padding: '22px 48px 12px',
         }}>
           {/* Logo */}
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 14 }}>
@@ -107,19 +106,18 @@ export default function Layout({ children }) {
       </div>
 
       {/* Main content */}
-      <main style={{
+      <main className="site-main" style={{
         flex: 1,
         maxWidth: 'var(--max-width-content)',
         width: '100%',
         margin: '0 auto',
-        padding: '0 48px 80px',
         boxSizing: 'border-box',
       }}>
         {children}
       </main>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid var(--color-border)', padding: '22px 48px', textAlign: 'center' }}>
+      <div className="site-footer" style={{ borderTop: '1px solid var(--color-border)', textAlign: 'center' }}>
         <span style={{ font: `600 12px/1.4 'Nunito Sans', sans-serif`, color: 'var(--color-text-muted)' }}>
           WineYak — a personal collection, tasted with joy.
         </span>

@@ -67,11 +67,10 @@ export default function Login() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
-      <div style={{
+      <div className="auth-card" style={{
         width: '100%', maxWidth: 440,
         background: 'oklch(99% 0.008 80)',
         borderRadius: 28,
-        padding: 40,
         boxShadow: '0 1px 2px rgba(40,20,10,0.06), 0 10px 24px -12px rgba(40,20,10,0.28)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>

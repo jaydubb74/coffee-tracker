@@ -78,16 +78,15 @@ export default function Landing() {
   return (
     <div>
       {/* Hero */}
-      <div style={{
+      <div className="hero-card" style={{
         background: BURGUNDY,
         borderRadius: 28,
-        padding: '52px 56px',
         marginTop: 8,
         position: 'relative',
         overflow: 'hidden',
       }}>
         <div style={{ maxWidth: 560, position: 'relative', zIndex: 1 }}>
-          <div style={{ font: `400 46px/1.1 'Abril Fatface', serif`, color: 'oklch(97% 0.02 85)' }}>
+          <div className="hero-title" style={{ fontFamily: `'Abril Fatface', serif`, fontWeight: 400, lineHeight: 1.1, color: 'oklch(97% 0.02 85)' }}>
             The good stuff, tasted first.
           </div>
           <div style={{ font: `600 16px/1.6 'Nunito Sans', sans-serif`, color: 'oklch(90% 0.03 85)', marginTop: 16 }}>

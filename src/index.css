@@ -379,3 +379,87 @@ body {
   outline: 2px solid var(--color-roast-light);
   outline-offset: 3px;
 }
+
+
+/* ============================================
+   RESPONSIVE LAYOUT (mobile-first fixes)
+   ============================================ */
+
+.header-inner {
+  padding: 22px 48px 12px;
+}
+
+.site-main {
+  padding: 0 48px 80px;
+}
+
+.site-footer {
+  padding: 22px 48px;
+}
+
+.hero-card {
+  padding: 52px 56px;
+}
+
+.hero-title {
+  font-size: 46px;
+}
+
+.banner-title {
+  font-size: 38px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: 40px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.detail-title {
+  font-size: 44px;
+}
+
+.auth-card {
+  padding: 40px;
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    padding: 14px 20px 8px;
+  }
+
+  .site-main {
+    padding: 0 20px 64px;
+  }
+
+  .site-footer {
+    padding: 18px 20px;
+  }
+
+  .hero-card {
+    padding: 32px 24px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .banner-title {
+    font-size: 28px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .detail-title {
+    font-size: 32px;
+  }
+
+  .auth-card {
+    padding: 28px 22px;
+  }
+}

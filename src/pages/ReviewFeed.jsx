@@ -59,7 +59,7 @@ export default function ReviewFeed() {
           color: 'oklch(97% 0.02 85)',
           marginBottom: 30,
         }}>
-          <div style={{ font: `400 38px/1.1 'Abril Fatface', serif` }}>{title}</div>
+          <div className="banner-title" style={{ fontFamily: `'Abril Fatface', serif`, fontWeight: 400, lineHeight: 1.1 }}>{title}</div>
           <div style={{ font: `600 14px/1.5 'Nunito Sans', sans-serif`, opacity: 0.85, marginTop: 8, maxWidth: 520 }}>
             {subtitle}
           </div>

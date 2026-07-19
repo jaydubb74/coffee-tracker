@@ -163,14 +163,8 @@ export default function ProductDetail() {
         {backLabel}
       </Link>
 
-      {/* 2-col layout */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(280px, 420px) 1fr',
-        gap: 40,
-        marginTop: 20,
-        alignItems: 'start',
-      }}>
+      {/* 2-col layout (stacks on mobile) */}
+      <div className="detail-grid">
         {/* Image */}
         <div style={{
           position: 'relative',
@@ -211,7 +205,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Name */}
-          <div style={{ font: `400 44px/1.1 'Abril Fatface', serif`, color: 'oklch(24% 0.02 40)' }}>
+          <div className="detail-title" style={{ fontFamily: `'Abril Fatface', serif`, fontWeight: 400, lineHeight: 1.1, color: 'oklch(24% 0.02 40)' }}>
             {product.variant || product.brand}
           </div>
 
