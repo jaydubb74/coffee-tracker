@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import ReviewCard from '../components/ReviewCard'
+import { CATEGORIES, averageRating } from '../lib/categories'
 
-const BURGUNDY = 'oklch(38% 0.13 25)'
-const FOREST = 'oklch(40% 0.09 155)'
+const BURGUNDY = CATEGORIES.coffee.accent
+const FOREST = CATEGORIES.ice_cream.accent
 
 function TopSection({ title, subtitle, accentColor, browseHref, items }) {
   return (
@@ -64,13 +65,8 @@ export default function Landing() {
       })
 
       const ranked = data
-        .map(p => {
-          const ratings = (p.reviews || []).map(r => r.rating)
-          if (!ratings.length) return null
-          const avg = Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length)
-          return { ...p, avg }
-        })
-        .filter(Boolean)
+        .map(p => ({ ...p, avg: averageRating(p.reviews) }))
+        .filter(p => p.avg != null)
         .sort((a, b) => b.avg - a.avg)
 
       setTopCoffee(ranked.filter(p => p.category === 'coffee').slice(0, 5))

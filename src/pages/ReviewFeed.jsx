@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import ReviewCard from '../components/ReviewCard'
-
-const BURGUNDY = 'oklch(38% 0.13 25)'
-const FOREST = 'oklch(40% 0.09 155)'
+import { CATEGORIES, averageRating } from '../lib/categories'
 
 export default function ReviewFeed() {
   const [searchParams] = useSearchParams()
@@ -12,6 +10,7 @@ export default function ReviewFeed() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -19,7 +18,8 @@ export default function ReviewFeed() {
       .from('products')
       .select('id, category, brand, variant, roast_type, image_url, reviews(rating)')
       .order('brand')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) setLoadError(error.message)
         setProducts(data || [])
         setLoading(false)
       })
@@ -27,7 +27,7 @@ export default function ReviewFeed() {
 
   const isCoffee = categoryParam === 'coffee'
   const isIce = categoryParam === 'ice_cream'
-  const accentColor = isIce ? FOREST : BURGUNDY
+  const accentColor = isIce ? CATEGORIES.ice_cream.accent : CATEGORIES.coffee.accent
   const title = isIce ? 'Ice Cream' : isCoffee ? 'Coffee' : null
   const subtitle = isIce
     ? 'Pints worth freezer space, scooped and scored.'
@@ -35,11 +35,7 @@ export default function ReviewFeed() {
       ? 'Whole-bean bags worth coming back to, roast after roast.'
       : null
 
-  const withAvg = products.map(p => {
-    const ratings = (p.reviews || []).map(r => r.rating)
-    const avg = ratings.length ? Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null
-    return { ...p, avg }
-  })
+  const withAvg = products.map(p => ({ ...p, avg: averageRating(p.reviews) }))
 
   const filtered = withAvg.filter(p => {
     if (categoryParam && p.category !== categoryParam) return false
@@ -85,6 +81,10 @@ export default function ReviewFeed() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--color-text-muted)', fontWeight: 600 }}>
           Loading…
+        </div>
+      ) : loadError ? (
+        <div style={{ textAlign: 'center', padding: '64px 0', color: '#DC2626', fontWeight: 600 }}>
+          Couldn't load products: {loadError}
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 0' }}>

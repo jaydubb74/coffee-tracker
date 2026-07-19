@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom'
-
-const BURGUNDY = 'oklch(38% 0.13 25)'
-const FOREST = 'oklch(40% 0.09 155)'
+import { categoryOf } from '../lib/categories'
 
 export default function ReviewCard({ product, avg }) {
-  const isCoffee = product.category === 'coffee'
-  const accentColor = isCoffee ? BURGUNDY : FOREST
-  const categoryLabel = isCoffee ? 'Coffee' : 'Ice Cream'
+  const cat = categoryOf(product)
+  const accentColor = cat.accent
+  const categoryLabel = cat.label
   const display = avg == null ? null : (avg / 10).toFixed(1)
 
   const tags = product.roast_type ? [product.roast_type] : []
@@ -47,7 +45,7 @@ export default function ReviewCard({ product, avg }) {
           />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>
-            {isCoffee ? '☕' : '🍦'}
+            {cat.emoji}
           </div>
         )}
 
