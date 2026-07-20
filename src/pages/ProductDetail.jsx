@@ -3,7 +3,27 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/auth-context'
 import ScoreRing from '../components/ScoreRing'
-import { CATEGORIES, categoryOf, averageRating } from '../lib/categories'
+import { CATEGORIES, categoryOf, averageRating, webReviewOf } from '../lib/categories'
+
+function WebScoreBadge({ score, accent, size = 56 }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        border: `2.5px solid ${accent}`,
+        background: 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <span style={{ fontWeight: 800, fontFamily: 'var(--font-body)', fontSize: 15, color: accent, lineHeight: 1 }}>
+          {(score / 10).toFixed(1)}
+        </span>
+      </div>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+        Web
+      </span>
+    </div>
+  )
+}
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -34,7 +54,7 @@ export default function ProductDetail() {
 
   async function load() {
     const [{ data: productData, error: productErr }, { data: reviewsData, error: reviewsErr }] = await Promise.all([
-      supabase.from('products').select('*').eq('id', id).maybeSingle(),
+      supabase.from('products').select('*, product_web_reviews(*)').eq('id', id).maybeSingle(),
       supabase.from('reviews').select('*').eq('product_id', id).order('created_at', { ascending: false }),
     ])
     if (productErr || reviewsErr) {
@@ -141,6 +161,8 @@ export default function ProductDetail() {
   )
 
   const avg = averageRating(reviews)
+  const webReview = webReviewOf(product)
+  const webSources = Array.isArray(webReview?.sources) ? webReview.sources : []
 
   const backHref = isCoffee ? '/reviews?category=coffee' : '/reviews?category=ice_cream'
   const backLabel = `← Back to ${isCoffee ? 'Coffee' : 'Ice Cream'}`
@@ -304,6 +326,48 @@ export default function ProductDetail() {
           )}
         </div>
       </div>
+
+      {/* What the web says */}
+      {webReview && (
+        <div style={{
+          marginTop: 32,
+          background: 'oklch(99% 0.008 80)',
+          borderRadius: 22,
+          padding: '24px 28px',
+          boxShadow: '0 1px 2px rgba(40,20,10,0.06), 0 10px 24px -12px rgba(40,20,10,0.18)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
+            <div style={{ font: `400 22px/1.1 'Abril Fatface', serif`, color: 'oklch(24% 0.02 40)' }}>
+              What the Web Says
+            </div>
+            {webReview.web_score != null && (
+              <WebScoreBadge score={webReview.web_score} accent={accentColor} />
+            )}
+          </div>
+
+          <p style={{ fontSize: 15, lineHeight: 1.65, color: 'var(--color-text-secondary)' }}>
+            {webReview.snippet}
+          </p>
+
+          <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '6px 14px', fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 600 }}>
+            <span>
+              {webSources.length > 0 ? `Based on ${webSources.length} source${webSources.length !== 1 ? 's' : ''} · ` : ''}
+              updated {new Date(webReview.researched_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </span>
+            {webSources.map(s => (
+              <a
+                key={s.url}
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                style={{ color: accentColor, textDecoration: 'underline', fontWeight: 700 }}
+              >
+                {s.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Review form */}
       {showRateForm && (

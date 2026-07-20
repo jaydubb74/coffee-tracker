@@ -16,7 +16,7 @@ export default function ReviewFeed() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, category, brand, variant, roast_type, image_url, reviews(rating)')
+      .select('id, category, brand, variant, roast_type, image_url, reviews(rating), product_web_reviews(web_score)')
       .order('brand')
       .then(({ data, error }) => {
         if (error) setLoadError(error.message)

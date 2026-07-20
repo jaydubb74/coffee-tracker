@@ -29,10 +29,11 @@ There are no tests.
 
 ### Data model (Supabase — project `dguoyckwjrgrcbkuguts`)
 
-Three tables:
+Four tables:
 - **`products`** — the canonical catalog. `category` is `'coffee' | 'ice_cream'`. `unique(category, brand, variant)` prevents duplicates. Price normalization: coffee → per 12 oz, ice cream → per pint (16 oz). `roast_type` is coffee-only; null for everything else.
 - **`reviews`** — join between a product and a `auth.users` user. `rating` is 1–100. No computed average is stored; every page calculates it from raw rows at query time.
 - **`profiles`** — auto-created via a `handle_new_user` trigger on `auth.users` insert. Stores `display_name` and `is_admin`.
+- **`product_web_reviews`** — one row per product of aggregated web sentiment (snippet, 1–100 `web_score`, confidence, sources jsonb). Written ONLY by the `/web-reviews` skill via the Supabase CLI (postgres role); the app reads it publicly and has no write path. UI: "What the Web Says" card on ProductDetail, outlined "WEB x.x" chip on ReviewCard — always visually separate from WineYak's own gold scores. Use `webReviewOf(product)` from `lib/categories.js` to read the embed.
 
 Storage bucket: `coffee-photos` (public). Images are uploaded at review submission time and their URL is written back to `products.image_url`.
 

@@ -55,7 +55,7 @@ export default function Landing() {
     async function load() {
       const { data } = await supabase
         .from('products')
-        .select('id, category, brand, variant, roast_type, image_url, reviews(rating)')
+        .select('id, category, brand, variant, roast_type, image_url, reviews(rating), product_web_reviews(web_score)')
 
       if (!data) return
 

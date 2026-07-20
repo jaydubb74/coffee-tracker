@@ -1,6 +1,7 @@
 -- WineYak — Multi-category schema
 -- Safe to re-run: drops all existing objects first
 
+drop table if exists public.product_web_reviews cascade;
 drop table if exists public.reviews cascade;
 drop table if exists public.products cascade;
 drop table if exists public.coffees cascade;
@@ -108,6 +109,23 @@ create policy "Users can update their own reviews"
 create policy "Users can delete own reviews; admins can delete any"
   on public.reviews for delete to authenticated
   using (auth.uid() = user_id or public.is_admin());
+
+-- -------------------------------------------------------
+
+-- Aggregated web-review research (written only by the /web-reviews skill
+-- via the Supabase CLI; the app reads publicly and never writes)
+create table public.product_web_reviews (
+  product_id    uuid primary key references public.products on delete cascade,
+  snippet       text not null,
+  web_score     integer check (web_score >= 1 and web_score <= 100),
+  confidence    text not null check (confidence in ('high', 'medium', 'low')),
+  sources       jsonb not null default '[]'::jsonb,
+  researched_at timestamptz not null default now()
+);
+
+alter table public.product_web_reviews enable row level security;
+create policy "Web reviews viewable by all"
+  on public.product_web_reviews for select using (true);
 
 -- -------------------------------------------------------
 

@@ -44,6 +44,13 @@ export function categoryOf(product) {
   return CATEGORIES[product?.category] ?? CATEGORIES.coffee
 }
 
+// PostgREST can return the 1:1 product_web_reviews embed as an object or a
+// one-element array depending on relationship detection — normalize to row-or-null.
+export function webReviewOf(product) {
+  const w = product?.product_web_reviews
+  return (Array.isArray(w) ? w[0] : w) ?? null
+}
+
 // Rounded 1–100 average of an array of { rating } rows, or null if empty.
 export function averageRating(reviews) {
   const ratings = (reviews || []).map(r => r.rating).filter(r => typeof r === 'number')

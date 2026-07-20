@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { categoryOf } from '../lib/categories'
+import { categoryOf, webReviewOf } from '../lib/categories'
 
 export default function ReviewCard({ product, avg }) {
   const cat = categoryOf(product)
   const accentColor = cat.accent
   const categoryLabel = cat.label
   const display = avg == null ? null : (avg / 10).toFixed(1)
+  const webScore = webReviewOf(product)?.web_score ?? null
 
   const tags = product.roast_type ? [product.roast_type] : []
 
@@ -107,8 +108,20 @@ export default function ReviewCard({ product, avg }) {
         }}>
           {product.brand}
         </div>
-        {tags.length > 0 && (
+        {(tags.length > 0 || webScore != null) && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+            {webScore != null && (
+              <span style={{
+                fontWeight: 700, fontSize: 11, lineHeight: '1.4',
+                color: accentColor,
+                border: `1.5px solid ${accentColor}`,
+                background: 'transparent',
+                padding: '2px 9px', borderRadius: 999,
+                letterSpacing: '0.03em',
+              }}>
+                WEB {(webScore / 10).toFixed(1)}
+              </span>
+            )}
             {tags.map(tag => (
               <span key={tag} style={{
                 fontWeight: 600, fontSize: 11, lineHeight: '1.4',
